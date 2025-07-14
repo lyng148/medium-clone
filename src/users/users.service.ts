@@ -1,11 +1,16 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDTO } from './dtos/create-user.dto';
 import * as bcrypt from 'bcrypt';
+import { LoginUserDTO } from './dtos/login-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
-	constructor(private prisma: PrismaService) {}
+	constructor(
+		private prisma: PrismaService,
+		private jwtService: JwtService,
+	) {}
 
 	async createUser(data: CreateUserDTO) {
 		const emailExists = await this.prisma.user.findUnique({
@@ -31,7 +36,6 @@ export class UsersService {
 			},
 
 			select: {
-				id: true,
 				email: true,
 				username: true,
 				bio: true,
@@ -40,5 +44,32 @@ export class UsersService {
 				updatedAt: true,
 			},
 		});
+	}
+
+	async loginUser(data: LoginUserDTO) {
+		const user = await this.prisma.user.findUnique({
+			where: { email: data.email },
+		});
+
+		if (!user || !(await bcrypt.compare(data.password, user.password))) {
+			throw new UnauthorizedException('Invalid credential.');
+		}
+
+		const payload = {
+			email: user.email,
+			username: user.username,
+			bio: user.bio,
+			image: user.image,
+		};
+
+		return {
+			user: {
+				email: user.email,
+				token: this.jwtService.sign(payload),
+				username: user.username,
+				bio: user.bio,
+				image: user.image,
+			},
+		};
 	}
 }
