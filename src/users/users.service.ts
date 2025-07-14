@@ -4,6 +4,7 @@ import { CreateUserDTO } from './dtos/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDTO } from './dtos/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import { User } from 'generated/prisma';
 
 @Injectable()
 export class UsersService {
@@ -29,21 +30,14 @@ export class UsersService {
 
 		const hashedPassword = await bcrypt.hash(data.password, 10);
 
-		return await this.prisma.user.create({
+		const user = await this.prisma.user.create({
 			data: {
 				...data,
 				password: hashedPassword,
 			},
-
-			select: {
-				email: true,
-				username: true,
-				bio: true,
-				image: true,
-				createdAt: true,
-				updatedAt: true,
-			},
 		});
+
+		return this.buildUserResponse(user);
 	}
 
 	async loginUser(data: LoginUserDTO) {
@@ -55,6 +49,10 @@ export class UsersService {
 			throw new UnauthorizedException('Invalid credential.');
 		}
 
+		return this.buildUserResponse(user);
+	}
+
+	private buildUserResponse(user: User) {
 		const payload = {
 			email: user.email,
 			username: user.username,
