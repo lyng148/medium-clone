@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { LoginUserDTO } from './dtos/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'generated/prisma';
+import { UpdateUserDto } from './dtos/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -50,6 +51,30 @@ export class UsersService {
     }
 
     return this.buildUserResponse(user);
+  }
+
+  async getCurrentUser(CurrentUser: User) {
+    const user = await this.prisma.user.findUnique({
+      where: { username: CurrentUser.username },
+    });
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+    return this.buildUserResponse(user);
+  }
+
+  async updateUser(currentUser: User, data: UpdateUserDto) {
+    // can them khi update xong token cu can exprire luon
+    const updateData: UpdateUserDto = { ...data };
+    if (data.password) {
+      updateData.password = await bcrypt.hash(data.password, 10);
+    }
+    delete updateData.confirmPassword;
+    const updatedUser = await this.prisma.user.update({
+      where: { username: currentUser.username },
+      data: updateData,
+    });
+    return this.buildUserResponse(updatedUser);
   }
 
   private buildUserResponse(user: User) {
