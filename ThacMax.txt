@@ -1,1 +1,0 @@
-- vi sao dto co 3 truong, nhung them truong thu  trong request thi van luu thanh cong va hien thi ra 4 truong. co cach nao ngan kh
