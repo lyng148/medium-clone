@@ -4,7 +4,7 @@ import { CreateUserDTO } from './dtos/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDTO } from './dtos/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
-import { User } from 'generated/prisma';
+import { User } from '../../generated/prisma';
 import { UpdateUserDto } from './dtos/update-user.dto';
 
 @Injectable()
@@ -78,6 +78,7 @@ export class UsersService {
 
   private buildUserResponse(user: User) {
     const payload = {
+      id: user.id,
       email: user.email,
       username: user.username,
       bio: user.bio,
@@ -86,6 +87,7 @@ export class UsersService {
 
     return {
       user: {
+        id: user.id,
         email: user.email,
         token: this.jwtService.sign(payload),
         username: user.username,
