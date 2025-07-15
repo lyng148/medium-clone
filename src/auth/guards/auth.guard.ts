@@ -6,39 +6,39 @@ import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-	constructor(
-		private jwtService: JwtService,
-		private reflector: Reflector,
-	) {}
+  constructor(
+    private jwtService: JwtService,
+    private reflector: Reflector,
+  ) {}
 
-	async canActivate(context: ExecutionContext): Promise<boolean> {
-		// skip auth guard for public api
-		const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-			context.getHandler(),
-			context.getClass(),
-		]);
-		if (isPublic) {
-			return true;
-		}
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    // skip auth guard for public api
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true;
+    }
 
-		const request: Request = context.switchToHttp().getRequest();
-		const token = this.extractTokenFromHeader(request);
-		if (!token) {
-			throw new UnauthorizedException();
-		}
-		try {
-			const payload = await this.jwtService.verifyAsync(token, {
-				secret: jwtConstants.secret,
-			});
-			request['user'] = payload;
-		} catch {
-			throw new UnauthorizedException();
-		}
-		return true;
-	}
+    const request: Request = context.switchToHttp().getRequest();
+    const token = this.extractTokenFromHeader(request);
+    if (!token) {
+      throw new UnauthorizedException();
+    }
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: jwtConstants.secret,
+      });
+      request['user'] = payload;
+    } catch {
+      throw new UnauthorizedException();
+    }
+    return true;
+  }
 
-	private extractTokenFromHeader(request: Request): string | undefined {
-		const [type, token] = request.headers.authorization?.split(' ') ?? [];
-		return type === 'Bearer' ? token : undefined;
-	}
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
+  }
 }

@@ -5,9 +5,9 @@ import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
-	constructor(
-		private userService: UsersService,
-		private jwtService: JwtService,
-		private prisma: PrismaService,
-	) {}
+  constructor(
+    private userService: UsersService,
+    private jwtService: JwtService,
+    private prisma: PrismaService,
+  ) {}
 }

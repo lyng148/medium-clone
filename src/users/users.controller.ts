@@ -7,23 +7,23 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('users')
 export class UsersController {
-	constructor(private userService: UsersService) {}
+  constructor(private userService: UsersService) {}
 
-	@Public()
-	@Post()
-	async register(@Body() createUserDTO: CreateUserDTO) {
-		return this.userService.createUser(createUserDTO);
-	}
+  @Public()
+  @Post()
+  async register(@Body() createUserDTO: CreateUserDTO) {
+    return this.userService.createUser(createUserDTO);
+  }
 
-	@Public()
-	@Post('login')
-	async login(@Body() loginUserDTO: LoginUserDTO) {
-		return this.userService.loginUser(loginUserDTO);
-	}
+  @Public()
+  @Post('login')
+  async login(@Body() loginUserDTO: LoginUserDTO) {
+    return this.userService.loginUser(loginUserDTO);
+  }
 
-	@UseGuards(AuthGuard)
-	@Get()
-	hello() {
-		return 'd';
-	}
+  @UseGuards(AuthGuard)
+  @Get()
+  hello() {
+    return 'd';
+  }
 }
