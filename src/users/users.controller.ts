@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put } from '@nestjs/common';
 import { CreateUserDTO } from './dtos/create-user.dto';
 import { UsersService } from './users.service';
 import { Public } from 'src/auth/constants';
 import { LoginUserDTO } from './dtos/login-user.dto';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { User } from 'generated/prisma';
+import { CurrentUser } from 'src/common/decorators/user.decorator';
+import { UpdateUserValidationPipe } from 'src/common/pipes/update-user.pipe';
+import { UpdateUserDto } from './dtos/update-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -21,9 +24,16 @@ export class UsersController {
     return this.userService.loginUser(loginUserDTO);
   }
 
-  @UseGuards(AuthGuard)
   @Get()
-  hello() {
-    return 'd';
+  getCurrentUser(@CurrentUser() user: User) {
+    return this.userService.getCurrentUser(user);
+  }
+
+  @Put()
+  updateUser(
+    @CurrentUser() user: User,
+    @Body(new UpdateUserValidationPipe()) updateUserDTO: UpdateUserDto,
+  ) {
+    return this.userService.updateUser(user, updateUserDTO);
   }
 }

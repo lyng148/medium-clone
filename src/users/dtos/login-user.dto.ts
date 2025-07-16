@@ -1,4 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { USER_VALIDATION } from '../users.constant';
 
 export class LoginUserDTO {
   @IsEmail()
@@ -7,6 +8,6 @@ export class LoginUserDTO {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @MinLength(USER_VALIDATION.PASSWORD.MIN_LENGTH, { message: USER_VALIDATION.PASSWORD.MESSAGE })
   password: string;
 }
