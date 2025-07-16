@@ -10,7 +10,7 @@ import { ListArticlesDto } from './dto/list-articles.dto';
 
 @Controller('articles')
 export class ArticlesController {
-  constructor(private readonly articlesService: ArticlesService) {}
+  constructor(private readonly articlesService: ArticlesService) { }
 
   @Post()
   create(@CurrentUser() currUser: User, @Body() createArticleDto: CreateArticleDto) {
@@ -48,10 +48,13 @@ export class ArticlesController {
   unfavoriteArticle(@CurrentUser() currUser: User, @Param('slug') slug: string) {
     return this.articlesService.unfavoriteArticle(currUser, slug);
   }
+<<<<<<< HEAD
 
   @Public()
   @Get()
   listArticles(@Query() listArticlesDto: ListArticlesDto, @CurrentUser() currUser?: User) {
     return this.articlesService.listArticles(listArticlesDto, currUser);
   }
+=======
+>>>>>>> 123c528 (feat(article): add favorite and unfavorite functionality for articles)
 }

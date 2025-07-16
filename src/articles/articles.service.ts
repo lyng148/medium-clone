@@ -91,6 +91,18 @@ export class ArticlesService {
     }
 
     const author = await this.findArticleAuthor(article.authorId);
+<<<<<<< HEAD
+=======
+
+    if (!author) {
+      return {
+        article: {
+          ...article,
+          author: null,
+        },
+      };
+    }
+>>>>>>> 123c528 (feat(article): add favorite and unfavorite functionality for articles)
 
     return this.buildArticleResponse(author, article);
   }
