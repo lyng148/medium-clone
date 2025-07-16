@@ -4,6 +4,7 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import slugify from 'slugify';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ListArticlesDto } from './dto/list-articles.dto';
 
 interface TagListOperations {
   connect: { id: number }[];
@@ -226,6 +227,95 @@ export class ArticlesService {
     });
 
     return this.buildArticleResponse(author, article);
+  }
+
+  async listArticles(listArticleDTO: ListArticlesDto, currUser?: User) {
+    const whereClause: any = {};
+
+    if (listArticleDTO.tag) {
+      whereClause.tagList = {
+        some: {
+          name: listArticleDTO.tag,
+        },
+      };
+    }
+
+    if (listArticleDTO.author) {
+      whereClause.author = {
+        username: listArticleDTO.author,
+      };
+    }
+
+    if (listArticleDTO.favorited) {
+      whereClause.favoritedBy = {
+        some: {
+          username: listArticleDTO.favorited,
+        },
+      };
+    }
+
+    const articles = await this.prisma.article.findMany({
+      where: whereClause,
+      select: {
+        slug: true,
+        title: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        tagList: {
+          select: {
+            name: true,
+          },
+        },
+        author: {
+          select: {
+            username: true,
+            bio: true,
+            image: true,
+          },
+        },
+        favoritedBy: currUser
+          ? {
+              where: {
+                id: currUser.id,
+              },
+              select: {
+                id: true,
+              },
+            }
+          : false,
+        _count: {
+          select: {
+            favoritedBy: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: listArticleDTO.limit || 20,
+      skip: listArticleDTO.offset || 0,
+    });
+
+    const transformedArticles = articles.map((article) => ({
+      slug: article.slug,
+      title: article.title,
+      description: article.description,
+      tagList: article.tagList.map((tag) => tag.name),
+      createdAt: article.createdAt,
+      updatedAt: article.updatedAt,
+      favorited: currUser ? article.favoritedBy.length > 0 : false,
+      favoritesCount: article._count.favoritedBy,
+      author: {
+        ...article.author,
+        following: false,
+      },
+    }));
+
+    return {
+      articles: transformedArticles,
+      articlesCount: transformedArticles.length,
+    };
   }
 
   private async findArticleAuthor(authorId: number): Promise<User | null> {
