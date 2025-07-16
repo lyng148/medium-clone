@@ -6,8 +6,12 @@ import { PrismaService } from 'prisma/prisma.service';
 @Injectable()
 export class CommentsService {
   constructor(private prisma: PrismaService) {}
+<<<<<<< HEAD
 
   async create(currUser: User, slug: string, createCommentDTO: CreateCommentDTO) {
+=======
+  async createComment(currUser: User, slug: string, createCommentDTO: CreateCommentDTO) {
+>>>>>>> b84e908 (feat(articles): add list articles functionality with filtering options)
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });

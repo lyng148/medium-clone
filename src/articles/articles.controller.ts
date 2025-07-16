@@ -10,7 +10,7 @@ import { ListArticlesDto } from './dto/list-articles.dto';
 
 @Controller('articles')
 export class ArticlesController {
-  constructor(private readonly articlesService: ArticlesService) { }
+  constructor(private readonly articlesService: ArticlesService) {}
 
   @Post()
   create(@CurrentUser() currUser: User, @Body() createArticleDto: CreateArticleDto) {
@@ -49,12 +49,18 @@ export class ArticlesController {
     return this.articlesService.unfavoriteArticle(currUser, slug);
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b84e908 (feat(articles): add list articles functionality with filtering options)
 
   @Public()
   @Get()
   listArticles(@Query() listArticlesDto: ListArticlesDto, @CurrentUser() currUser?: User) {
     return this.articlesService.listArticles(listArticlesDto, currUser);
   }
+<<<<<<< HEAD
 =======
 >>>>>>> 123c528 (feat(article): add favorite and unfavorite functionality for articles)
+=======
+>>>>>>> b84e908 (feat(articles): add list articles functionality with filtering options)
 }
