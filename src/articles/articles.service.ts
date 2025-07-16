@@ -91,6 +91,15 @@ export class ArticlesService {
 
     const author = await this.findArticleAuthor(article.authorId);
 
+    if (!author) {
+      return {
+        article: {
+          ...article,
+          author: null,
+        },
+      };
+    }
+
     return this.buildArticleResponse(author, article);
   }
 
