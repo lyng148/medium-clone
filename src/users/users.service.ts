@@ -64,7 +64,6 @@ export class UsersService {
   }
 
   async updateUser(currentUser: User, data: UpdateUserDto) {
-    // can them khi update xong token cu can exprire luon
     const updateData: UpdateUserDto = { ...data };
     if (data.password) {
       updateData.password = await bcrypt.hash(data.password, 10);
