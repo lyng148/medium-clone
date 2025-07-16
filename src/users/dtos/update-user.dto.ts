@@ -1,32 +1,33 @@
 import { IsEmail, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
+import { USER_VALIDATION } from '../users.constant';
 
 export class UpdateUserDto {
-	@IsOptional()
-	@IsEmail({}, { message: 'Please provide a valid email address' })
-	email?: string;
+  @IsOptional()
+  @IsEmail({}, { message: USER_VALIDATION.EMAIL.MESSAGE })
+  email?: string;
 
-	@IsOptional()
-	@IsString()
-	@MinLength(3, { message: 'Username must be at least 3 characters long' })
-	@MaxLength(20, { message: 'Username cannot exceed 20 characters' })
-	username?: string;
+  @IsOptional()
+  @IsString()
+  @MinLength(USER_VALIDATION.USERNAME.MIN_LENGTH, { message: USER_VALIDATION.USERNAME.MIN_MESSAGE })
+  @MaxLength(USER_VALIDATION.USERNAME.MAX_LENGTH, { message: USER_VALIDATION.USERNAME.MAX_MESSAGE })
+  username?: string;
 
-	@IsOptional()
-	@IsString()
-	@MinLength(6, { message: 'Password must be at least 6 characters long' })
-	password?: string;
+  @IsOptional()
+  @IsString()
+  @MinLength(USER_VALIDATION.PASSWORD.MIN_LENGTH, { message: USER_VALIDATION.PASSWORD.MESSAGE })
+  password?: string;
 
-	@IsOptional()
-	@IsString()
-	@MinLength(6, { message: 'Password must be at least 6 characters long' })
-	confirmPassword?: string;
+  @IsOptional()
+  @IsString()
+  @MinLength(USER_VALIDATION.PASSWORD.MIN_LENGTH, { message: USER_VALIDATION.PASSWORD.MESSAGE })
+  confirmPassword?: string;
 
-	@IsOptional()
-	@IsUrl({}, { message: 'Image must be a valid URL' })
-	image?: string;
+  @IsOptional()
+  @IsUrl({}, { message: USER_VALIDATION.IMAGE.MESSAGE })
+  image?: string;
 
-	@IsOptional()
-	@IsString()
-	@MaxLength(500, { message: 'Bio cannot exceed 500 characters' })
-	bio?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(USER_VALIDATION.BIO.MAX_LENGTH, { message: USER_VALIDATION.BIO.MAX_MESSAGE })
+  bio?: string;
 }
