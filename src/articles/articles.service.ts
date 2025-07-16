@@ -5,6 +5,11 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import slugify from 'slugify';
 import { PrismaService } from '../../prisma/prisma.service';
 
+interface TagListOperations {
+  connect: { id: number }[];
+  create: { name: string }[];
+}
+
 @Injectable()
 export class ArticlesService {
   constructor(private prisma: PrismaService) {}
@@ -30,8 +35,8 @@ export class ArticlesService {
       throw new Error('User not found');
     }
 
-    let tagListData: { connect: { id: number }[]; create: { name: string }[] } | undefined;
-    if (createArticleDto.tagList && createArticleDto.tagList.length > 0) {
+    let tagListData: TagListOperations | undefined;
+    if (createArticleDto.tagList?.length) {
       const existingTags = await this.prisma.tag.findMany({
         where: {
           name: {
@@ -52,24 +57,21 @@ export class ArticlesService {
       };
     }
 
-    const article = await this.prisma.article.create({
-      data: {
-        title: createArticleDto.title,
-        description: createArticleDto.description,
-        body: createArticleDto.body,
-        slug: slug,
-        tagList: tagListData
-          ? {
-              connect: tagListData.connect,
-              create: tagListData.create,
-            }
-          : undefined,
-        author: {
-          connect: {
-            id: author.id,
-          },
+    const articleData = {
+      title: createArticleDto.title,
+      description: createArticleDto.description,
+      body: createArticleDto.body,
+      slug: slug,
+      author: {
+        connect: {
+          id: author.id,
         },
       },
+      ...(tagListData && { tagList: tagListData }),
+    };
+
+    const article = await this.prisma.article.create({
+      data: articleData,
       include: {
         tagList: true,
       },
@@ -105,10 +107,22 @@ export class ArticlesService {
 
   async update(currUser: User, slug: string, updateArticleDto: UpdateArticleDto) {
     if (updateArticleDto.title) {
-      updateArticleDto.slug = slugify(updateArticleDto.title, {
+      const newSlug = slugify(updateArticleDto.title, {
         lower: true,
         strict: true,
       });
+
+      const existingArticle = await this.prisma.article.findUnique({
+        where: { slug: newSlug },
+      });
+
+      if (existingArticle && existingArticle.slug !== slug) {
+        throw new ConflictException(
+          `Article with title "${updateArticleDto.title}" already exists`,
+        );
+      }
+
+      updateArticleDto.slug = newSlug;
     }
 
     const article = await this.prisma.article.update({
@@ -132,6 +146,7 @@ export class ArticlesService {
     const { password, createdAt, updatedAt, id, email, ...authorInfo } = author;
     if ('iat' in authorInfo) delete authorInfo.iat;
     if ('exp' in authorInfo) delete authorInfo.exp;
+
     return {
       article: {
         ...article,
