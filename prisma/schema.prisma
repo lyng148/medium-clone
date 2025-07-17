@@ -23,4 +23,31 @@ model User {
   image     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  articles    Article[]  @relation("UserArticles")
+  favorites   Article[]  @relation("UserFavorites")
+  following   User[]     @relation("UserFollows")
+  followedBy  User[]     @relation("UserFollows")
+}
+
+model Article {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  title       String
+  description String
+  body        String   @db.Text
+  tagList     Tag[]    @relation("ArticleTags")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author      User     @relation("UserArticles", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    Int
+  
+  favoritedBy User[]   @relation("UserFavorites")
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  articles  Article[] @relation("ArticleTags")
 }
