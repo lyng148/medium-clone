@@ -37,4 +37,14 @@ export class ArticlesController {
   remove(@Param('slug') slug: string) {
     return this.articlesService.remove(slug);
   }
+
+  @Post(':slug/favorite')
+  favoriteArticle(@CurrentUser() currUser: User, @Param('slug') slug: string) {
+    return this.articlesService.favoriteArticle(currUser, slug);
+  }
+
+  @Delete(':slug/favorite')
+  unfavoriteArticle(@CurrentUser() currUser: User, @Param('slug') slug: string) {
+    return this.articlesService.unfavoriteArticle(currUser, slug);
+  }
 }
