@@ -1,15 +1,15 @@
-import {BadRequestException, Delete, Injectable} from '@nestjs/common';
-import {User, Comment} from 'generated/prisma';
-import {CreateCommentDTO} from './dto/create-comment.dto';
-import {PrismaService} from 'prisma/prisma.service';
-import {connect} from 'http2';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { User, Comment } from 'generated/prisma';
+import { CreateCommentDTO } from './dto/create-comment.dto';
+import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) { }
-  async createComment(currUser: User, slug: string, createCommentDTO: CreateCommentDTO) {
+  constructor(private prisma: PrismaService) {}
+
+  async create(currUser: User, slug: string, createCommentDTO: CreateCommentDTO) {
     const article = await this.prisma.article.findUnique({
-      where: {slug: slug},
+      where: { slug: slug },
     });
     if (!article) {
       throw new BadRequestException('Article not found');
@@ -31,21 +31,27 @@ export class CommentsService {
       },
       select: {
         id: true,
-        createdAt: true,
-        updatedAt: true,
         body: true,
         authorId: true,
         articleId: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
-    console.log(comment);
 
-    return this.buildCommentResponse(currUser, comment);
+    return this.buildCommentResponse(currUser, {
+      id: comment.id,
+      body: comment.body,
+      authorId: comment.authorId,
+      articleId: comment.articleId,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+    });
   }
 
-  async getCommentFromArticle(slug: string) {
+  async getFromArticle(slug: string) {
     const article = await this.prisma.article.findUnique({
-      where: {slug: slug},
+      where: { slug: slug },
     });
 
     if (!article) {
@@ -53,40 +59,34 @@ export class CommentsService {
     }
 
     const comments = await this.prisma.comment.findMany({
-      where: {articleId: article.id},
+      where: { articleId: article.id },
+      orderBy: { createdAt: 'desc' },
     });
-
-    console.log(comments);
 
     const commentPromises = comments.map(async (comment) => {
       const author = await this.prisma.user.findUnique({
-        where: {id: comment.authorId},
+        where: { id: comment.authorId },
       });
-      if (!author) {
-        return {
-          ...comment,
-          author: null,
-        };
-      }
       return {
-          ...comment,
-          author: author,
-        };
+        ...comment,
+        author: author,
+      };
     });
 
     return Promise.all(commentPromises);
   }
 
-  deleteComment(id: number){
+  delete(id: number) {
     return this.prisma.comment.delete({
-      where: {id: id}
-    })
+      where: { id: id },
+    });
   }
 
   private buildCommentResponse(user: User, comment: Comment) {
-    const {email, id, ...authorInfo} = user;
+    const { email, id, ...authorInfo } = user;
     if ('iat' in authorInfo) delete authorInfo.iat;
     if ('exp' in authorInfo) delete authorInfo.exp;
+
     return {
       comment: {
         ...comment,
