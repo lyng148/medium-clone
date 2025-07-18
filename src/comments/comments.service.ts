@@ -60,20 +60,33 @@ export class CommentsService {
 
     const comments = await this.prisma.comment.findMany({
       where: { articleId: article.id },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        body: true,
+        author: {
+          select: {
+            username: true,
+            bio: true,
+            image: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
 
-    const commentPromises = comments.map(async (comment) => {
-      const author = await this.prisma.user.findUnique({
-        where: { id: comment.authorId },
-      });
-      return {
-        ...comment,
-        author: author,
-      };
-    });
-
-    return Promise.all(commentPromises);
+    return {
+      comments: comments.map((comment) => ({
+        comment: {
+          id: comment.id,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+          body: comment.body,
+          author: comment.author,
+        },
+      })),
+    };
   }
 
   delete(id: number) {
