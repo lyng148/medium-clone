@@ -91,15 +91,6 @@ export class ArticlesService {
 
     const author = await this.findArticleAuthor(article.authorId);
 
-    if (!author) {
-      return {
-        article: {
-          ...article,
-          author: null,
-        },
-      };
-    }
-
     return this.buildArticleResponse(author, article);
   }
 
@@ -228,10 +219,16 @@ export class ArticlesService {
     return this.buildArticleResponse(author, article);
   }
 
-  private async findArticleAuthor(authorId: number): Promise<User | null> {
-    return await this.prisma.user.findUnique({
+  private async findArticleAuthor(authorId: number): Promise<User> {
+    const author = await this.prisma.user.findUnique({
       where: { id: authorId },
     });
+
+    if (!author) {
+      throw new Error('Author not found - this should not happen:<');
+    }
+
+    return author;
   }
 
   private buildArticleResponse(author: User, article: Article) {
