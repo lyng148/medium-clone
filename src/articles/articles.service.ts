@@ -89,18 +89,7 @@ export class ArticlesService {
       throw new BadRequestException('Article not found');
     }
 
-    const author = await this.prisma.user.findUnique({
-      where: { id: article.authorId },
-    });
-
-    if (!author) {
-      return {
-        article: {
-          ...article,
-          author: null,
-        },
-      };
-    }
+    const author = await this.findArticleAuthor(article.authorId);
 
     return this.buildArticleResponse(author, article);
   }
@@ -140,6 +129,106 @@ export class ArticlesService {
     return this.prisma.article.delete({
       where: { slug: slug },
     });
+  }
+
+  async favoriteArticle(currUser: User, slug: string) {
+    const article = await this.prisma.article.findUnique({
+      where: { slug: slug },
+    });
+
+    if (!article) {
+      throw new BadRequestException('Article not found');
+    }
+
+    const userWithFavorites = await this.prisma.user.findUnique({
+      where: { id: currUser.id },
+      include: {
+        favorites: {
+          where: {
+            slug: slug,
+          },
+        },
+      },
+    });
+
+    if (userWithFavorites?.favorites.length) {
+      throw new BadRequestException('Already favorited this article');
+    }
+
+    const author = await this.findArticleAuthor(article.authorId);
+
+    if (!author) {
+      throw new BadRequestException('Article author not found');
+    }
+
+    await this.prisma.user.update({
+      where: { id: currUser.id },
+      data: {
+        favorites: {
+          connect: {
+            id: article.id,
+          },
+        },
+      },
+    });
+
+    return this.buildArticleResponse(author, article);
+  }
+
+  async unfavoriteArticle(currUser: User, slug: string) {
+    const article = await this.prisma.article.findUnique({
+      where: { slug: slug },
+    });
+
+    if (!article) {
+      throw new BadRequestException('Article not found');
+    }
+
+    const userWithFavorites = await this.prisma.user.findUnique({
+      where: { id: currUser.id },
+      include: {
+        favorites: {
+          where: {
+            id: article.id,
+          },
+        },
+      },
+    });
+
+    if (!userWithFavorites?.favorites.length) {
+      throw new BadRequestException('Article not favorited yet');
+    }
+
+    const author = await this.findArticleAuthor(article.authorId);
+
+    if (!author) {
+      throw new BadRequestException('Article author not found');
+    }
+
+    await this.prisma.user.update({
+      where: { id: currUser.id },
+      data: {
+        favorites: {
+          disconnect: {
+            id: article.id,
+          },
+        },
+      },
+    });
+
+    return this.buildArticleResponse(author, article);
+  }
+
+  private async findArticleAuthor(authorId: number): Promise<User> {
+    const author = await this.prisma.user.findUnique({
+      where: { id: authorId },
+    });
+
+    if (!author) {
+      throw new Error('Author not found - this should not happen:<');
+    }
+
+    return author;
   }
 
   private buildArticleResponse(author: User, article: Article) {
