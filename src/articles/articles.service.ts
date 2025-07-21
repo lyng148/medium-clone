@@ -224,16 +224,24 @@ export class ArticlesService {
     const whereClause: any = {};
 
     if (listArticleDTO.tag) {
+      const tags = listArticleDTO.tag.split(',').map((tag) => tag.trim());
+
       whereClause.tagList = {
         some: {
-          name: listArticleDTO.tag,
+          name: {
+            in: tags,
+          },
         },
       };
     }
 
     if (listArticleDTO.author) {
+      const authors = listArticleDTO.author.split(',').map((author) => author.trim());
+
       whereClause.author = {
-        username: listArticleDTO.author,
+        username: {
+          in: authors,
+        },
       };
     }
 
@@ -306,6 +314,8 @@ export class ArticlesService {
     return {
       articles: transformedArticles,
       articlesCount: transformedArticles.length,
+      limit: listArticleDTO.limit || 20,
+      offset: listArticleDTO.offset || 0,
     };
   }
 
