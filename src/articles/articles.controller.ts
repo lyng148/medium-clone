@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Query } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -6,6 +6,7 @@ import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { User } from 'generated/prisma';
 import { ArticleOwnerGuard } from 'src/common/guards/article-owner.guard';
 import { Public } from 'src/auth/constants';
+import { ListArticlesDto } from './dto/list-articles.dto';
 
 @Controller('articles')
 export class ArticlesController {
@@ -46,5 +47,11 @@ export class ArticlesController {
   @Delete(':slug/favorite')
   unfavoriteArticle(@CurrentUser() currUser: User, @Param('slug') slug: string) {
     return this.articlesService.unfavoriteArticle(currUser, slug);
+  }
+
+  @Public()
+  @Get()
+  listArticles(@Query() listArticlesDto: ListArticlesDto, @CurrentUser() currUser?: User) {
+    return this.articlesService.listArticles(listArticlesDto, currUser);
   }
 }
