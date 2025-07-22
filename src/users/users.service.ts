@@ -101,29 +101,12 @@ export class UsersService {
   }
 
   async followUser(currentUser: User, targetUsername: string) {
-    if (currentUser.username === targetUsername) {
-      throw new ConflictException('You cannot follow yourself.');
-    }
-
-    const targetUser = await this.prisma.user.findUnique({
-      where: { username: targetUsername },
-    });
-
-    if (!targetUser) {
-      throw new NotFoundException(`User with username "${targetUsername}" not found.`);
-    }
+    const targetUser = await this.validateFollowOperation(currentUser, targetUsername);
 
     // Check if already following
-    const existingFollow = await this.prisma.user.findFirst({
-      where: {
-        id: currentUser.id,
-        following: {
-          some: { id: targetUser.id },
-        },
-      },
-    });
+    const isFollowing = await this.checkFollowStatus(currentUser.id, targetUser.id);
 
-    if (existingFollow) {
+    if (isFollowing) {
       throw new ConflictException(`You are already following ${targetUsername}.`);
     }
 
@@ -136,42 +119,16 @@ export class UsersService {
       },
     });
 
-    const updatedTargetUser = await this.prisma.user.findUnique({
-      where: { username: targetUsername },
-      include: {
-        followedBy: {
-          where: { id: currentUser.id },
-        },
-      },
-    });
-
-    return this.buildProfileResponse(updatedTargetUser!, currentUser);
+    return this.getUpdatedProfileResponse(targetUsername, currentUser);
   }
 
   async unfollowUser(currentUser: User, targetUsername: string) {
-    if (currentUser.username === targetUsername) {
-      throw new ConflictException('You cannot unfollow yourself.');
-    }
-
-    const targetUser = await this.prisma.user.findUnique({
-      where: { username: targetUsername },
-    });
-
-    if (!targetUser) {
-      throw new NotFoundException(`User with username "${targetUsername}" not found.`);
-    }
+    const targetUser = await this.validateFollowOperation(currentUser, targetUsername);
 
     // Check if currently following
-    const existingFollow = await this.prisma.user.findFirst({
-      where: {
-        id: currentUser.id,
-        following: {
-          some: { id: targetUser.id },
-        },
-      },
-    });
+    const isFollowing = await this.checkFollowStatus(currentUser.id, targetUser.id);
 
-    if (!existingFollow) {
+    if (!isFollowing) {
       throw new ConflictException(`You are not following ${targetUsername}.`);
     }
 
@@ -184,6 +141,39 @@ export class UsersService {
       },
     });
 
+    return this.getUpdatedProfileResponse(targetUsername, currentUser);
+  }
+
+  private async validateFollowOperation(currentUser: User, targetUsername: string): Promise<User> {
+    if (currentUser.username === targetUsername) {
+      throw new ConflictException('You cannot follow/unfollow yourself.');
+    }
+
+    const targetUser = await this.prisma.user.findUnique({
+      where: { username: targetUsername },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundException(`User with username "${targetUsername}" not found.`);
+    }
+
+    return targetUser;
+  }
+
+  private async checkFollowStatus(currentUserId: number, targetUserId: number): Promise<boolean> {
+    const existingFollow = await this.prisma.user.findFirst({
+      where: {
+        id: currentUserId,
+        following: {
+          some: { id: targetUserId },
+        },
+      },
+    });
+
+    return !!existingFollow;
+  }
+
+  private async getUpdatedProfileResponse(targetUsername: string, currentUser: User) {
     const updatedTargetUser = await this.prisma.user.findUnique({
       where: { username: targetUsername },
       include: {
