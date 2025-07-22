@@ -1,10 +1,20 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { CreateCommentDTO } from './dto/create-comment.dto';
 import { User } from 'generated/prisma';
 import { Public } from 'src/auth/constants';
-import {CommentOwnerGuard} from 'src/common/guards/comment-owner.guard';
+import { CommentOwnerGuard } from 'src/common/guards/comment-owner.guard';
+import { Language } from '../i18n/decorators/language.decorator';
 
 @Controller('articles')
 export class CommentsController {
@@ -15,14 +25,15 @@ export class CommentsController {
     @CurrentUser() currUser: User,
     @Param('slug') slug: string,
     @Body() createCommentDTO: CreateCommentDTO,
+    @Language() lang: string,
   ) {
-    return await this.commentsService.createComment(currUser, slug, createCommentDTO);
+    return await this.commentsService.createComment(currUser, slug, createCommentDTO, lang);
   }
 
   @Public()
   @Get(':slug/comments')
-  async getCommentFromArticle(@Param('slug') slug: string) {
-    return await this.commentsService.getCommentFromArticle(slug);
+  async getCommentFromArticle(@Param('slug') slug: string, @Language() lang: string) {
+    return await this.commentsService.getCommentFromArticle(slug, lang);
   }
 
   @UseGuards(CommentOwnerGuard)

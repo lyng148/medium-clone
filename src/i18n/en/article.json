@@ -1,0 +1,23 @@
+{
+  "errors": {
+    "titleExists": "Article with title \"{{title}}\" already exists",
+    "notFound": "Article not found",
+    "authorNotFound": "Article author not found",
+    "alreadyFavorited": "Already favorited this article",
+    "notFavorited": "Article not favorited yet"
+  },
+  "success": {
+    "created": "Article created successfully",
+    "updated": "Article updated successfully",
+    "deleted": "Article deleted successfully",
+    "favorited": "Article favorited successfully",
+    "unfavorited": "Article unfavorited successfully"
+  },
+  "validation": {
+    "titleRequired": "Title is required",
+    "descriptionRequired": "Description is required",
+    "bodyRequired": "Body is required",
+    "titleTooLong": "Title is too long",
+    "descriptionTooLong": "Description is too long"
+  }
+}

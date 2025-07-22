@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -12,9 +11,12 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ArticlesModule } from './articles/articles.module';
 import { CommentsModule } from './comments/comments.module';
+import { I18nModule } from './i18n/i18n.module';
+import { I18nService } from './i18n/i18n.service';
 
 @Module({
   imports: [
+    I18nModule,
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
@@ -27,7 +29,8 @@ import { CommentsModule } from './comments/comments.module';
     AppService,
     {
       provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
+      useFactory: (i18nService: I18nService) => new HttpExceptionFilter(i18nService),
+      inject: [I18nService],
     },
     {
       provide: APP_PIPE,

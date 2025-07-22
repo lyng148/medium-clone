@@ -1,0 +1,18 @@
+{
+  "errors": {
+    "commentNotFound": "Không tìm thấy bình luận",
+    "articleNotFound": "Không tìm thấy bài viết cho bình luận",
+    "notAuthorized": "Không có quyền chỉnh sửa bình luận này",
+    "cannotDeleteComment": "Không thể xóa bình luận này"
+  },
+  "success": {
+    "created": "Tạo bình luận thành công",
+    "updated": "Cập nhật bình luận thành công",
+    "deleted": "Xóa bình luận thành công"
+  },
+  "validation": {
+    "bodyRequired": "Nội dung bình luận là bắt buộc",
+    "bodyTooLong": "Nội dung bình luận quá dài",
+    "bodyTooShort": "Nội dung bình luận quá ngắn"
+  }
+}
