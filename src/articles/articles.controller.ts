@@ -48,19 +48,10 @@ export class ArticlesController {
   unfavoriteArticle(@CurrentUser() currUser: User, @Param('slug') slug: string) {
     return this.articlesService.unfavoriteArticle(currUser, slug);
   }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> b84e908 (feat(articles): add list articles functionality with filtering options)
 
   @Public()
   @Get()
   listArticles(@Query() listArticlesDto: ListArticlesDto, @CurrentUser() currUser?: User) {
     return this.articlesService.listArticles(listArticlesDto, currUser);
   }
-<<<<<<< HEAD
-=======
->>>>>>> 123c528 (feat(article): add favorite and unfavorite functionality for articles)
-=======
->>>>>>> b84e908 (feat(articles): add list articles functionality with filtering options)
 }

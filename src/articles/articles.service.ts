@@ -91,18 +91,6 @@ export class ArticlesService {
     }
 
     const author = await this.findArticleAuthor(article.authorId);
-<<<<<<< HEAD
-=======
-
-    if (!author) {
-      return {
-        article: {
-          ...article,
-          author: null,
-        },
-      };
-    }
->>>>>>> 123c528 (feat(article): add favorite and unfavorite functionality for articles)
 
     return this.buildArticleResponse(author, article);
   }
@@ -236,7 +224,6 @@ export class ArticlesService {
     const whereClause: any = {};
 
     if (listArticleDTO.tag) {
-<<<<<<< HEAD
       const tags = listArticleDTO.tag.split(',').map((tag) => tag.trim());
 
       whereClause.tagList = {
@@ -244,27 +231,17 @@ export class ArticlesService {
           name: {
             in: tags,
           },
-=======
-      whereClause.tagList = {
-        some: {
-          name: listArticleDTO.tag,
->>>>>>> b84e908 (feat(articles): add list articles functionality with filtering options)
         },
       };
     }
 
     if (listArticleDTO.author) {
-<<<<<<< HEAD
       const authors = listArticleDTO.author.split(',').map((author) => author.trim());
 
       whereClause.author = {
         username: {
           in: authors,
         },
-=======
-      whereClause.author = {
-        username: listArticleDTO.author,
->>>>>>> b84e908 (feat(articles): add list articles functionality with filtering options)
       };
     }
 
