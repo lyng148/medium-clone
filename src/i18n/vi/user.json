@@ -1,13 +1,13 @@
 {
   "errors": {
     "notFound": "Không tìm thấy người dùng",
-    "emailExists": "Người dùng với email \"{{email}}\" đã tồn tại",
-    "usernameExists": "Tên đăng nhập \"{{username}}\" đã được sử dụng",
-    "profileNotFound": "Không tìm thấy người dùng với tên \"{{username}}\"",
+    "emailExists": "Người dùng với email {email} đã tồn tại",
+    "usernameExists": "Tên đăng nhập {username} đã được sử dụng",
+    "profileNotFound": "Không tìm thấy người dùng với tên {username}",
     "cannotFollowSelf": "Bạn không thể theo dõi chính mình",
     "cannotUnfollowSelf": "Bạn không thể bỏ theo dõi chính mình",
-    "alreadyFollowing": "Bạn đã theo dõi {{username}} rồi",
-    "notFollowing": "Bạn chưa theo dõi {{username}}",
+    "alreadyFollowing": "Bạn đã theo dõi {username} rồi",
+    "notFollowing": "Bạn chưa theo dõi {{username}",
     "cannotUpdateUser": "Không thể cập nhật thông tin người dùng",
     "invalidUserData": "Dữ liệu người dùng không hợp lệ"
   },

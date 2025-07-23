@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  UseGuards,
+  Query,
+  Patch,
+} from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -8,6 +19,7 @@ import { User } from 'generated/prisma';
 import { ArticleOwnerGuard } from 'src/common/guards/article-owner.guard';
 import { Public } from 'src/auth/constants';
 import { Language } from '../i18n/decorators/language.decorator';
+import { PublishArticlesDto } from './dto/publish-article.dto';
 
 @Controller('articles')
 export class ArticlesController {
@@ -22,10 +34,14 @@ export class ArticlesController {
     return this.articlesService.create(currUser, createArticleDto, lang);
   }
 
-  @Public()
+  @Get('drafts')
+  getDraftArticles(@CurrentUser() currentUser: User) {
+    return this.articlesService.getDraftArticles(currentUser);
+  }
+
   @Get(':slug')
-  findOne(@Param('slug') slug: string, @Language() lang: string) {
-    return this.articlesService.findOne(slug, lang);
+  findOne(@CurrentUser() currUser: User, @Param('slug') slug: string, @Language() lang: string) {
+    return this.articlesService.findOne(currUser, slug, lang);
   }
 
   @Put(':slug')
@@ -67,5 +83,25 @@ export class ArticlesController {
   @Get()
   listArticles(@Query() listArticlesDto: ListArticlesDto, @CurrentUser() currUser?: User) {
     return this.articlesService.listArticles(listArticlesDto, currUser);
+  }
+
+  @Post('publish')
+  publishArticles(
+    @CurrentUser() currentUser: User,
+    @Body() publishArticlesDto: PublishArticlesDto,
+    @Language() lang: string,
+  ) {
+    return this.articlesService.publishArticles(currentUser, publishArticlesDto, lang);
+  }
+
+  @Patch(':slug/status')
+  @UseGuards(ArticleOwnerGuard)
+  updateArticleStatus(
+    @CurrentUser() currentUser: User,
+    @Param('slug') slug: string,
+    @Body('status') status: 'DRAFT' | 'PUBLISHED',
+    @Language() lang: string,
+  ) {
+    return this.articlesService.updateArticleStatus(currentUser, slug, status, lang);
   }
 }

@@ -1,17 +1,19 @@
 {
   "errors": {
-    "titleExists": "Bài viết với tiêu đề \"{{title}}\" đã tồn tại",
+    "titleExists": "Bài viết với tiêu đề {title} đã tồn tại",
     "notFound": "Không tìm thấy bài viết",
     "authorNotFound": "Không tìm thấy tác giả của bài viết",
     "alreadyFavorited": "Đã yêu thích bài viết này rồi",
-    "notFavorited": "Bài viết chưa được yêu thích"
+    "notFavorited": "Bài viết chưa được yêu thích",
+    "someArticlesNotFound": "Không tìm thấy một số bài viết, có thể không tồn tại hoặc đã xuất bản"
   },
   "success": {
     "created": "Tạo bài viết thành công",
     "updated": "Cập nhật bài viết thành công",
     "deleted": "Xóa bài viết thành công",
     "favorited": "Yêu thích bài viết thành công",
-    "unfavorited": "Bỏ yêu thích bài viết thành công"
+    "unfavorited": "Bỏ yêu thích bài viết thành công",
+    "published": "Xuất bản thành công {count} bài viết"
   },
   "validation": {
     "titleRequired": "Tiêu đề là bắt buộc",
