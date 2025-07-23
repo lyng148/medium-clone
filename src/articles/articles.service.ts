@@ -1,4 +1,4 @@
-import { Article, User } from './../../generated/prisma/index.d';
+import { User } from './../../generated/prisma/index.d';
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -82,18 +82,14 @@ export class ArticlesService {
 
     const article = await this.prisma.article.create({
       data: articleData,
-      include: {
-        tagList: true,
-      },
+      include: this.getArticleIncludeOptions(),
     });
 
     return this.buildArticleResponse(author, article);
   }
 
   async findOne(slug: string, lang?: string) {
-    const article = await this.prisma.article.findUnique({
-      where: { slug: slug },
-    });
+    const article = await this.getArticleWithCounts({ slug });
 
     if (!article) {
       throw new BadRequestException(this.i18nService.getArticleMessage('errors.notFound', lang));
@@ -129,9 +125,7 @@ export class ArticlesService {
     const article = await this.prisma.article.update({
       where: { slug: slug },
       data: updateArticleDto,
-      include: {
-        tagList: true,
-      },
+      include: this.getArticleIncludeOptions(),
     });
 
     return this.buildArticleResponse(currUser, article);
@@ -188,17 +182,7 @@ export class ArticlesService {
       },
     });
 
-    const updatedArticle = await this.prisma.article.update({
-      where: { id: article.id },
-      data: {
-        favoriteCount: {
-          increment: 1,
-        },
-      },
-      include: {
-        tagList: true,
-      },
-    });
+    const updatedArticle = await this.getArticleWithCounts({ id: article.id });
 
     return this.buildArticleResponse(author, updatedArticle);
   }
@@ -248,23 +232,17 @@ export class ArticlesService {
       },
     });
 
-    const updatedArticle = await this.prisma.article.update({
-      where: { id: article.id },
-      data: {
-        favoriteCount: {
-          decrement: 1,
-        },
-      },
-      include: {
-        tagList: true,
-      },
-    });
+    const updatedArticle = await this.getArticleWithCounts({ id: article.id });
 
     return this.buildArticleResponse(author, updatedArticle);
   }
 
   async listArticles(listArticleDTO: ListArticlesDto, currUser?: User) {
-    const whereClause: any = {};
+    const whereClause: {
+      tagList?: { some: { name: { in: string[] } } };
+      author?: { username: { in: string[] } };
+      favoritedBy?: { some: { username: string } };
+    } = {};
 
     if (listArticleDTO.tag) {
       const tags = listArticleDTO.tag.split(',').map((tag) => tag.trim());
@@ -304,8 +282,6 @@ export class ArticlesService {
         description: true,
         createdAt: true,
         updatedAt: true,
-        commentCount: true,
-        favoriteCount: true,
         tagList: {
           select: {
             name: true,
@@ -331,6 +307,7 @@ export class ArticlesService {
         _count: {
           select: {
             favoritedBy: true,
+            comments: true,
           },
         },
       },
@@ -349,8 +326,8 @@ export class ArticlesService {
       createdAt: article.createdAt,
       updatedAt: article.updatedAt,
       favorited: currUser ? article.favoritedBy.length > 0 : false,
-      favoritesCount: article.favoriteCount,
-      commentCount: article.commentCount,
+      favoritesCount: article._count.favoritedBy,
+      commentCount: article._count.comments,
       author: {
         ...article.author,
         following: false,
@@ -377,17 +354,38 @@ export class ArticlesService {
     return author;
   }
 
-  private buildArticleResponse(author: User, article: Article) {
+  private buildArticleResponse(author: User, article: any) {
     const { password, createdAt, updatedAt, id, email, ...authorInfo } = author;
-    if ('iat' in authorInfo) delete authorInfo.iat;
-    if ('exp' in authorInfo) delete authorInfo.exp;
+    // Remove JWT properties if they exist
+    if ('iat' in authorInfo) delete (authorInfo as any).iat;
+    if ('exp' in authorInfo) delete (authorInfo as any).exp;
 
     return {
       article: {
         ...article,
-        favoritesCount: article.favoriteCount,
+        favoritesCount: article._count?.favoritedBy || 0,
+        commentCount: article._count?.comments || 0,
         author: authorInfo,
       },
     };
+  }
+
+  private getArticleIncludeOptions() {
+    return {
+      tagList: true,
+      _count: {
+        select: {
+          favoritedBy: true,
+          comments: true,
+        },
+      },
+    };
+  }
+
+  private async getArticleWithCounts(where: { slug: string } | { id: number }) {
+    return this.prisma.article.findUnique({
+      where,
+      include: this.getArticleIncludeOptions(),
+    });
   }
 }
