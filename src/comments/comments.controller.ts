@@ -14,6 +14,7 @@ import { CreateCommentDTO } from './dto/create-comment.dto';
 import { User } from 'generated/prisma';
 import { Public } from 'src/auth/constants';
 import { CommentOwnerGuard } from 'src/common/guards/comment-owner.guard';
+import { Language } from '../i18n/decorators/language.decorator';
 
 @Controller('articles')
 export class CommentsController {
@@ -24,14 +25,15 @@ export class CommentsController {
     @CurrentUser() currUser: User,
     @Param('slug') slug: string,
     @Body() createCommentDTO: CreateCommentDTO,
+    @Language() lang: string,
   ) {
-    return await this.commentsService.create(currUser, slug, createCommentDTO);
+    return await this.commentsService.createComment(currUser, slug, createCommentDTO, lang);
   }
 
   @Public()
   @Get(':slug/comments')
-  async getFromArticle(@Param('slug') slug: string) {
-    return await this.commentsService.getFromArticle(slug);
+  async getCommentFromArticle(@Param('slug') slug: string, @Language() lang: string) {
+    return await this.commentsService.getCommentFromArticle(slug, lang);
   }
 
   @UseGuards(CommentOwnerGuard)

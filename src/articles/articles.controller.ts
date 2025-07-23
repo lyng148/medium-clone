@@ -2,25 +2,30 @@ import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Query } fro
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { ListArticlesDto } from './dto/list-articles.dto';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { User } from 'generated/prisma';
 import { ArticleOwnerGuard } from 'src/common/guards/article-owner.guard';
 import { Public } from 'src/auth/constants';
-import { ListArticlesDto } from './dto/list-articles.dto';
+import { Language } from '../i18n/decorators/language.decorator';
 
 @Controller('articles')
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
   @Post()
-  create(@CurrentUser() currUser: User, @Body() createArticleDto: CreateArticleDto) {
-    return this.articlesService.create(currUser, createArticleDto);
+  create(
+    @CurrentUser() currUser: User,
+    @Body() createArticleDto: CreateArticleDto,
+    @Language() lang: string,
+  ) {
+    return this.articlesService.create(currUser, createArticleDto, lang);
   }
 
   @Public()
   @Get(':slug')
-  findOne(@Param('slug') slug: string) {
-    return this.articlesService.findOne(slug);
+  findOne(@Param('slug') slug: string, @Language() lang: string) {
+    return this.articlesService.findOne(slug, lang);
   }
 
   @Put(':slug')
@@ -29,8 +34,9 @@ export class ArticlesController {
     @CurrentUser() currUser: User,
     @Param('slug') slug: string,
     @Body() updateArticleDto: UpdateArticleDto,
+    @Language() lang: string,
   ) {
-    return this.articlesService.update(currUser, slug, updateArticleDto);
+    return this.articlesService.update(currUser, slug, updateArticleDto, lang);
   }
 
   @Delete(':slug')
@@ -40,13 +46,21 @@ export class ArticlesController {
   }
 
   @Post(':slug/favorite')
-  favoriteArticle(@CurrentUser() currUser: User, @Param('slug') slug: string) {
-    return this.articlesService.favoriteArticle(currUser, slug);
+  favoriteArticle(
+    @CurrentUser() currUser: User,
+    @Param('slug') slug: string,
+    @Language() lang: string,
+  ) {
+    return this.articlesService.favoriteArticle(currUser, slug, lang);
   }
 
   @Delete(':slug/favorite')
-  unfavoriteArticle(@CurrentUser() currUser: User, @Param('slug') slug: string) {
-    return this.articlesService.unfavoriteArticle(currUser, slug);
+  unfavoriteArticle(
+    @CurrentUser() currUser: User,
+    @Param('slug') slug: string,
+    @Language() lang: string,
+  ) {
+    return this.articlesService.unfavoriteArticle(currUser, slug, lang);
   }
 
   @Public()

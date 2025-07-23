@@ -5,6 +5,7 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import slugify from 'slugify';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ListArticlesDto } from './dto/list-articles.dto';
+import { I18nService } from '../i18n/i18n.service';
 
 interface TagListOperations {
   connect: { id: number }[];
@@ -13,8 +14,12 @@ interface TagListOperations {
 
 @Injectable()
 export class ArticlesService {
-  constructor(private prisma: PrismaService) {}
-  async create(currUser: User, createArticleDto: CreateArticleDto) {
+  constructor(
+    private prisma: PrismaService,
+    private i18nService: I18nService,
+  ) {}
+
+  async create(currUser: User, createArticleDto: CreateArticleDto, lang?: string) {
     const slug = slugify(createArticleDto.title, {
       lower: true,
       strict: true,
@@ -25,7 +30,11 @@ export class ArticlesService {
     });
 
     if (existedArticle) {
-      throw new ConflictException(`Article with title "${createArticleDto.title}" already exists`);
+      throw new ConflictException(
+        this.i18nService.getArticleMessage('errors.titleExists', lang, {
+          title: createArticleDto.title,
+        }),
+      );
     }
 
     const author = await this.prisma.user.findUnique({
@@ -33,7 +42,7 @@ export class ArticlesService {
     });
 
     if (!author) {
-      throw new Error('User not found');
+      throw new Error(this.i18nService.getUserMessage('errors.notFound', lang));
     }
 
     let tagListData: TagListOperations | undefined;
@@ -81,13 +90,13 @@ export class ArticlesService {
     return this.buildArticleResponse(author, article);
   }
 
-  async findOne(slug: string) {
+  async findOne(slug: string, lang?: string) {
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });
 
     if (!article) {
-      throw new BadRequestException('Article not found');
+      throw new BadRequestException(this.i18nService.getArticleMessage('errors.notFound', lang));
     }
 
     const author = await this.findArticleAuthor(article.authorId);
@@ -95,7 +104,7 @@ export class ArticlesService {
     return this.buildArticleResponse(author, article);
   }
 
-  async update(currUser: User, slug: string, updateArticleDto: UpdateArticleDto) {
+  async update(currUser: User, slug: string, updateArticleDto: UpdateArticleDto, lang?: string) {
     if (updateArticleDto.title) {
       const newSlug = slugify(updateArticleDto.title, {
         lower: true,
@@ -108,7 +117,9 @@ export class ArticlesService {
 
       if (existingArticle && existingArticle.slug !== slug) {
         throw new ConflictException(
-          `Article with title "${updateArticleDto.title}" already exists`,
+          this.i18nService.getArticleMessage('errors.titleExists', lang, {
+            title: updateArticleDto.title,
+          }),
         );
       }
 
@@ -132,13 +143,13 @@ export class ArticlesService {
     });
   }
 
-  async favoriteArticle(currUser: User, slug: string) {
+  async favoriteArticle(currUser: User, slug: string, lang?: string) {
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });
 
     if (!article) {
-      throw new BadRequestException('Article not found');
+      throw new BadRequestException(this.i18nService.getArticleMessage('errors.notFound', lang));
     }
 
     const userWithFavorites = await this.prisma.user.findUnique({
@@ -153,13 +164,17 @@ export class ArticlesService {
     });
 
     if (userWithFavorites?.favorites.length) {
-      throw new BadRequestException('Already favorited this article');
+      throw new BadRequestException(
+        this.i18nService.getArticleMessage('errors.alreadyFavorited', lang),
+      );
     }
 
     const author = await this.findArticleAuthor(article.authorId);
 
     if (!author) {
-      throw new BadRequestException('Article author not found');
+      throw new BadRequestException(
+        this.i18nService.getArticleMessage('errors.authorNotFound', lang),
+      );
     }
 
     await this.prisma.user.update({
@@ -176,13 +191,13 @@ export class ArticlesService {
     return this.buildArticleResponse(author, article);
   }
 
-  async unfavoriteArticle(currUser: User, slug: string) {
+  async unfavoriteArticle(currUser: User, slug: string, lang?: string) {
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });
 
     if (!article) {
-      throw new BadRequestException('Article not found');
+      throw new BadRequestException(this.i18nService.getArticleMessage('errors.notFound', lang));
     }
 
     const userWithFavorites = await this.prisma.user.findUnique({
@@ -197,13 +212,17 @@ export class ArticlesService {
     });
 
     if (!userWithFavorites?.favorites.length) {
-      throw new BadRequestException('Article not favorited yet');
+      throw new BadRequestException(
+        this.i18nService.getArticleMessage('errors.notFavorited', lang),
+      );
     }
 
     const author = await this.findArticleAuthor(article.authorId);
 
     if (!author) {
-      throw new BadRequestException('Article author not found');
+      throw new BadRequestException(
+        this.i18nService.getArticleMessage('errors.authorNotFound', lang),
+      );
     }
 
     await this.prisma.user.update({

@@ -2,17 +2,26 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { User, Comment } from 'generated/prisma';
 import { CreateCommentDTO } from './dto/create-comment.dto';
 import { PrismaService } from 'prisma/prisma.service';
+import { I18nService } from '../i18n/i18n.service';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private i18nService: I18nService,
+  ) {}
 
-  async create(currUser: User, slug: string, createCommentDTO: CreateCommentDTO) {
+  async createComment(
+    currUser: User,
+    slug: string,
+    createCommentDTO: CreateCommentDTO,
+    lang?: string,
+  ) {
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });
     if (!article) {
-      throw new BadRequestException('Article not found');
+      throw new BadRequestException(this.i18nService.getArticleMessage('errors.notFound', lang));
     }
 
     const comment = await this.prisma.comment.create({
@@ -49,13 +58,13 @@ export class CommentsService {
     });
   }
 
-  async getFromArticle(slug: string) {
+  async getCommentFromArticle(slug: string, lang?: string) {
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });
 
     if (!article) {
-      throw new BadRequestException('Article not found');
+      throw new BadRequestException(this.i18nService.getArticleMessage('errors.notFound', lang));
     }
 
     const comments = await this.prisma.comment.findMany({

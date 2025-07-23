@@ -7,6 +7,7 @@ import { User } from 'generated/prisma';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { UpdateUserValidationPipe } from 'src/common/pipes/update-user.pipe';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { Language } from '../i18n/decorators/language.decorator';
 
 @Controller()
 export class UsersController {
@@ -14,42 +15,55 @@ export class UsersController {
 
   @Public()
   @Post('users')
-  async register(@Body() createUserDTO: CreateUserDTO) {
-    return this.userService.createUser(createUserDTO);
+  async register(@Body() createUserDTO: CreateUserDTO, @Language() lang: string) {
+    return this.userService.createUser(createUserDTO, lang);
   }
 
   @Public()
   @Post('users/login')
-  async login(@Body() loginUserDTO: LoginUserDTO) {
-    return this.userService.loginUser(loginUserDTO);
+  async login(@Body() loginUserDTO: LoginUserDTO, @Language() lang: string) {
+    return this.userService.loginUser(loginUserDTO, lang);
   }
 
   @Get('user')
-  getCurrentUser(@CurrentUser() user: User) {
-    return this.userService.getCurrentUser(user);
+  getCurrentUser(@CurrentUser() user: User, @Language() lang: string) {
+    return this.userService.getCurrentUser(user, lang);
   }
 
   @Put('user')
   updateUser(
     @CurrentUser() user: User,
     @Body(new UpdateUserValidationPipe()) updateUserDTO: UpdateUserDto,
+    @Language() lang: string,
   ) {
-    return this.userService.updateUser(user, updateUserDTO);
+    return this.userService.updateUser(user, updateUserDTO, lang);
   }
 
   @Public()
   @Get('profiles/:username')
-  async getProfile(@Param('username') username: string, @CurrentUser() currentUser?: User) {
-    return this.userService.getProfile(username, currentUser);
+  async getProfile(
+    @Param('username') username: string,
+    @CurrentUser() currentUser: User,
+    @Language() lang: string,
+  ) {
+    return this.userService.getProfile(username, currentUser, lang);
   }
 
   @Post('profiles/:username/follow')
-  async followUser(@CurrentUser() currUser: User, @Param('username') username: string) {
-    return this.userService.followUser(currUser, username);
+  async followUser(
+    @CurrentUser() currUser: User,
+    @Param('username') username: string,
+    @Language() lang: string,
+  ) {
+    return this.userService.followUser(currUser, username, lang);
   }
 
   @Delete('profiles/:username/follow')
-  async unfollowUser(@CurrentUser() currUser: User, @Param('username') username: string) {
-    return this.userService.unfollowUser(currUser, username);
+  async unfollowUser(
+    @CurrentUser() currUser: User,
+    @Param('username') username: string,
+    @Language() lang: string,
+  ) {
+    return this.userService.unfollowUser(currUser, username, lang);
   }
 }
