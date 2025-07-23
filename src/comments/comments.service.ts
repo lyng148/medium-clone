@@ -11,12 +11,7 @@ export class CommentsService {
     private i18nService: I18nService,
   ) {}
 
-  async createComment(
-    currUser: User,
-    slug: string,
-    createCommentDTO: CreateCommentDTO,
-    lang?: string,
-  ) {
+  async create(currUser: User, slug: string, createCommentDTO: CreateCommentDTO, lang?: string) {
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });
@@ -48,6 +43,15 @@ export class CommentsService {
       },
     });
 
+    await this.prisma.article.update({
+      where: { id: article.id },
+      data: {
+        commentCount: {
+          increment: 1,
+        },
+      },
+    });
+
     return this.buildCommentResponse(currUser, {
       id: comment.id,
       body: comment.body,
@@ -58,7 +62,7 @@ export class CommentsService {
     });
   }
 
-  async getCommentFromArticle(slug: string, lang?: string) {
+  async getFromArticle(slug: string, lang?: string) {
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });
@@ -98,7 +102,22 @@ export class CommentsService {
     };
   }
 
-  delete(id: number) {
+  async delete(id: number) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: id },
+    });
+
+    if (comment) {
+      await this.prisma.article.update({
+        where: { id: comment.articleId },
+        data: {
+          commentCount: {
+            decrement: 1,
+          },
+        },
+      });
+    }
+
     return this.prisma.comment.delete({
       where: { id: id },
     });

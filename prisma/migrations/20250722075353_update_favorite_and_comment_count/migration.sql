@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `Article` ADD COLUMN `commentCount` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `favoriteCount` INTEGER NOT NULL DEFAULT 0;

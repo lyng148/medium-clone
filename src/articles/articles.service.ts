@@ -188,7 +188,19 @@ export class ArticlesService {
       },
     });
 
-    return this.buildArticleResponse(author, article);
+    const updatedArticle = await this.prisma.article.update({
+      where: { id: article.id },
+      data: {
+        favoriteCount: {
+          increment: 1,
+        },
+      },
+      include: {
+        tagList: true,
+      },
+    });
+
+    return this.buildArticleResponse(author, updatedArticle);
   }
 
   async unfavoriteArticle(currUser: User, slug: string, lang?: string) {
@@ -236,7 +248,19 @@ export class ArticlesService {
       },
     });
 
-    return this.buildArticleResponse(author, article);
+    const updatedArticle = await this.prisma.article.update({
+      where: { id: article.id },
+      data: {
+        favoriteCount: {
+          decrement: 1,
+        },
+      },
+      include: {
+        tagList: true,
+      },
+    });
+
+    return this.buildArticleResponse(author, updatedArticle);
   }
 
   async listArticles(listArticleDTO: ListArticlesDto, currUser?: User) {
@@ -280,6 +304,8 @@ export class ArticlesService {
         description: true,
         createdAt: true,
         updatedAt: true,
+        commentCount: true,
+        favoriteCount: true,
         tagList: {
           select: {
             name: true,
@@ -323,7 +349,8 @@ export class ArticlesService {
       createdAt: article.createdAt,
       updatedAt: article.updatedAt,
       favorited: currUser ? article.favoritedBy.length > 0 : false,
-      favoritesCount: article._count.favoritedBy,
+      favoritesCount: article.favoriteCount,
+      commentCount: article.commentCount,
       author: {
         ...article.author,
         following: false,
@@ -358,6 +385,7 @@ export class ArticlesService {
     return {
       article: {
         ...article,
+        favoritesCount: article.favoriteCount,
         author: authorInfo,
       },
     };
