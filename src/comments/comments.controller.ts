@@ -27,13 +27,13 @@ export class CommentsController {
     @Body() createCommentDTO: CreateCommentDTO,
     @Language() lang: string,
   ) {
-    return await this.commentsService.createComment(currUser, slug, createCommentDTO, lang);
+    return await this.commentsService.create(currUser, slug, createCommentDTO, lang);
   }
 
   @Public()
   @Get(':slug/comments')
   async getCommentFromArticle(@Param('slug') slug: string, @Language() lang: string) {
-    return await this.commentsService.getCommentFromArticle(slug, lang);
+    return await this.commentsService.getFromArticle(slug, lang);
   }
 
   @UseGuards(CommentOwnerGuard)

@@ -11,12 +11,7 @@ export class CommentsService {
     private i18nService: I18nService,
   ) {}
 
-  async createComment(
-    currUser: User,
-    slug: string,
-    createCommentDTO: CreateCommentDTO,
-    lang?: string,
-  ) {
+  async create(currUser: User, slug: string, createCommentDTO: CreateCommentDTO, lang?: string) {
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });
@@ -58,7 +53,7 @@ export class CommentsService {
     });
   }
 
-  async getCommentFromArticle(slug: string, lang?: string) {
+  async getFromArticle(slug: string, lang?: string) {
     const article = await this.prisma.article.findUnique({
       where: { slug: slug },
     });
@@ -98,7 +93,7 @@ export class CommentsService {
     };
   }
 
-  delete(id: number) {
+  async delete(id: number) {
     return this.prisma.comment.delete({
       where: { id: id },
     });
@@ -106,6 +101,7 @@ export class CommentsService {
 
   private buildCommentResponse(user: User, comment: Comment) {
     const { email, id, ...authorInfo } = user;
+    // Remove JWT properties if they exist
     if ('iat' in authorInfo) delete authorInfo.iat;
     if ('exp' in authorInfo) delete authorInfo.exp;
 
