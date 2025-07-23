@@ -40,16 +40,22 @@ export class CommentsService {
       },
       select: {
         id: true,
-        createdAt: true,
-        updatedAt: true,
         body: true,
         authorId: true,
         articleId: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
-    console.log(comment);
 
-    return this.buildCommentResponse(currUser, comment);
+    return this.buildCommentResponse(currUser, {
+      id: comment.id,
+      body: comment.body,
+      authorId: comment.authorId,
+      articleId: comment.articleId,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+    });
   }
 
   async getCommentFromArticle(slug: string, lang?: string) {
@@ -63,30 +69,36 @@ export class CommentsService {
 
     const comments = await this.prisma.comment.findMany({
       where: { articleId: article.id },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        body: true,
+        author: {
+          select: {
+            username: true,
+            bio: true,
+            image: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     });
 
-    console.log(comments);
-
-    const commentPromises = comments.map(async (comment) => {
-      const author = await this.prisma.user.findUnique({
-        where: { id: comment.authorId },
-      });
-      if (!author) {
-        return {
-          ...comment,
-          author: null,
-        };
-      }
-      return {
-        ...comment,
-        author: author,
-      };
-    });
-
-    return Promise.all(commentPromises);
+    return {
+      comments: comments.map((comment) => ({
+        comment: {
+          id: comment.id,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+          body: comment.body,
+          author: comment.author,
+        },
+      })),
+    };
   }
 
-  deleteComment(id: number) {
+  delete(id: number) {
     return this.prisma.comment.delete({
       where: { id: id },
     });
@@ -96,6 +108,7 @@ export class CommentsService {
     const { email, id, ...authorInfo } = user;
     if ('iat' in authorInfo) delete authorInfo.iat;
     if ('exp' in authorInfo) delete authorInfo.exp;
+
     return {
       comment: {
         ...comment,

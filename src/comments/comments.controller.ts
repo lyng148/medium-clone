@@ -21,7 +21,7 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post(':slug/comments')
-  async createComment(
+  async create(
     @CurrentUser() currUser: User,
     @Param('slug') slug: string,
     @Body() createCommentDTO: CreateCommentDTO,
@@ -38,7 +38,7 @@ export class CommentsController {
 
   @UseGuards(CommentOwnerGuard)
   @Delete(':slug/comments/:id')
-  deleteComment(@Param('slug') slug: string, @Param('id', new ParseIntPipe()) id: number) {
-    return this.commentsService.deleteComment(id);
+  delete(@Param('slug') slug: string, @Param('id', new ParseIntPipe()) id: number) {
+    return this.commentsService.delete(id);
   }
 }

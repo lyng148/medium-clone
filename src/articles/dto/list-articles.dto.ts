@@ -15,13 +15,25 @@ export class ListArticlesDto {
   favorited?: string;
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') {
+      return 20;
+    }
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 20 : parsed;
+  })
   @IsInt()
   @Min(1)
   limit?: number = 20;
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') {
+      return 0;
+    }
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 0 : parsed;
+  })
   @IsInt()
   @Min(0)
   offset?: number = 0;

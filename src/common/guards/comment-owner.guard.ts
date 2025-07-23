@@ -5,12 +5,12 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import {User} from 'generated/prisma';
-import {PrismaService} from 'prisma/prisma.service';
+import { User } from 'generated/prisma';
+import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class CommentOwnerGuard implements CanActivate {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -27,7 +27,7 @@ export class CommentOwnerGuard implements CanActivate {
     }
 
     const article = await this.prisma.article.findUnique({
-      where: {slug: articleSlug},
+      where: { slug: articleSlug },
     });
 
     if (!article) {
@@ -35,7 +35,7 @@ export class CommentOwnerGuard implements CanActivate {
     }
 
     const comment = await this.prisma.comment.findUnique({
-      where: {id: commentId},
+      where: { id: commentId },
     });
 
     if (!comment) {
