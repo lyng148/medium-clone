@@ -1,13 +1,13 @@
 {
   "errors": {
     "notFound": "User not found",
-    "emailExists": "User with email \"{{email}}\" already exists",
-    "usernameExists": "Username \"{{username}}\" is already taken",
-    "profileNotFound": "User with username \"{{username}}\" not found",
+    "emailExists": "User with email {email} already exists",
+    "usernameExists": "Username {username} is already taken",
+    "profileNotFound": "User with username {username} not found",
     "cannotFollowSelf": "You cannot follow yourself",
     "cannotUnfollowSelf": "You cannot unfollow yourself",
-    "alreadyFollowing": "You are already following {{username}}",
-    "notFollowing": "You are not following {{username}}",
+    "alreadyFollowing": "You are already following {username}",
+    "notFollowing": "You are not following {username}",
     "cannotUpdateUser": "Cannot update user information",
     "invalidUserData": "Invalid user data provided"
   },

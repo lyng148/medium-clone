@@ -1,11 +1,19 @@
-import { User } from './../../generated/prisma/index.d';
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { ArticleStatus, User } from '../../generated/prisma/index';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import slugify from 'slugify';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ListArticlesDto } from './dto/list-articles.dto';
 import { I18nService } from '../i18n/i18n.service';
+import { PublishArticlesDto } from './dto/publish-article.dto';
+import { DraftArticlesResponseDto } from './dto/draft-articles-response.dto';
+import { PublishArticlesResponseDto } from './dto/publish-articles-response.dto';
 
 interface TagListOperations {
   connect: { id: number }[];
@@ -72,6 +80,7 @@ export class ArticlesService {
       description: createArticleDto.description,
       body: createArticleDto.body,
       slug: slug,
+      status: ArticleStatus.DRAFT,
       author: {
         connect: {
           id: author.id,
@@ -88,10 +97,91 @@ export class ArticlesService {
     return this.buildArticleResponse(author, article);
   }
 
-  async findOne(slug: string, lang?: string) {
+  async getDraftArticles(currentUser: User): Promise<DraftArticlesResponseDto> {
+    const articles = await this.prisma.article.findMany({
+      where: {
+        authorId: currentUser.id,
+        status: 'DRAFT',
+      },
+      include: this.getArticleIncludeOptions(),
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    return {
+      articles: articles.map((article) => this.buildArticleResponse(currentUser, article)),
+      articlesCount: articles.length,
+    };
+  }
+
+  async publishArticles(
+    currentUser: User,
+    publishData: PublishArticlesDto,
+    language?: string,
+  ): Promise<PublishArticlesResponseDto> {
+    // Check if all articles belong to the user and are in draft status
+    const draftArticles = await this.prisma.article.findMany({
+      where: {
+        slug: { in: publishData.articleSlugs },
+        authorId: currentUser.id,
+        status: 'DRAFT',
+      },
+    });
+
+    if (draftArticles.length !== publishData.articleSlugs.length) {
+      throw new NotFoundException(
+        this.i18nService.getArticleMessage('errors.someArticlesNotFound', language),
+      );
+    }
+
+    // Publish all articles
+    await this.prisma.article.updateMany({
+      where: {
+        slug: { in: publishData.articleSlugs },
+        authorId: currentUser.id,
+      },
+      data: {
+        status: 'PUBLISHED',
+      },
+    });
+
+    return {
+      message: this.i18nService.getArticleMessage('success.published', language, {
+        count: draftArticles.length,
+      }),
+    };
+  }
+  async updateArticleStatus(currentUser: User, slug: string, status: ArticleStatus, lang?: string) {
+    const article = await this.prisma.article.findUnique({
+      where: { slug },
+    });
+
+    if (!article) {
+      throw new NotFoundException(this.i18nService.getArticleMessage('errors.notFound', lang));
+    }
+
+    const updatedArticle = await this.prisma.article.update({
+      where: { slug },
+      data: {
+        status,
+      },
+      include: this.getArticleIncludeOptions(),
+    });
+
+    const author = await this.findArticleAuthor(article.authorId);
+
+    return this.buildArticleResponse(author, updatedArticle);
+  }
+
+  async findOne(currUser: User, slug: string, lang?: string) {
     const article = await this.getArticleWithCounts({ slug });
 
     if (!article) {
+      throw new BadRequestException(this.i18nService.getArticleMessage('errors.notFound', lang));
+    }
+
+    if (article.status === 'DRAFT' && (!currUser || article.authorId !== currUser.id)) {
       throw new BadRequestException(this.i18nService.getArticleMessage('errors.notFound', lang));
     }
 
@@ -242,7 +332,10 @@ export class ArticlesService {
       tagList?: { some: { name: { in: string[] } } };
       author?: { username: { in: string[] } };
       favoritedBy?: { some: { username: string } };
-    } = {};
+      status: ArticleStatus;
+    } = {
+      status: ArticleStatus.PUBLISHED,
+    };
 
     if (listArticleDTO.tag) {
       const tags = listArticleDTO.tag.split(',').map((tag) => tag.trim());

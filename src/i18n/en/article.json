@@ -1,17 +1,19 @@
 {
   "errors": {
-    "titleExists": "Article with title \"{{title}}\" already exists",
+    "titleExists": "Article with title {title} already exists",
     "notFound": "Article not found",
     "authorNotFound": "Article author not found",
     "alreadyFavorited": "Already favorited this article",
-    "notFavorited": "Article not favorited yet"
+    "notFavorited": "Article not favorited yet",
+    "someArticlesNotFound": "Some articles not found or already published"
   },
   "success": {
     "created": "Article created successfully",
     "updated": "Article updated successfully",
     "deleted": "Article deleted successfully",
     "favorited": "Article favorited successfully",
-    "unfavorited": "Article unfavorited successfully"
+    "unfavorited": "Article unfavorited successfully",
+    "published": "Successfully published {count} articles"
   },
   "validation": {
     "titleRequired": "Title is required",
