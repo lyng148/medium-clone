@@ -20,6 +20,8 @@ import { ArticleOwnerGuard } from 'src/common/guards/article-owner.guard';
 import { Public } from 'src/auth/constants';
 import { Language } from '../i18n/decorators/language.decorator';
 import { PublishArticlesDto } from './dto/publish-article.dto';
+import { DraftArticlesResponseDto } from './dto/draft-articles-response.dto';
+import { PublishArticlesResponseDto } from './dto/publish-articles-response.dto';
 
 @Controller('articles')
 export class ArticlesController {
@@ -35,7 +37,7 @@ export class ArticlesController {
   }
 
   @Get('drafts')
-  getDraftArticles(@CurrentUser() currentUser: User) {
+  getDraftArticles(@CurrentUser() currentUser: User): Promise<DraftArticlesResponseDto> {
     return this.articlesService.getDraftArticles(currentUser);
   }
 
@@ -88,10 +90,10 @@ export class ArticlesController {
   @Post('publish')
   publishArticles(
     @CurrentUser() currentUser: User,
-    @Body() publishArticlesDto: PublishArticlesDto,
-    @Language() lang: string,
-  ) {
-    return this.articlesService.publishArticles(currentUser, publishArticlesDto, lang);
+    @Body() publishData: PublishArticlesDto,
+    @Language() language: string,
+  ): Promise<PublishArticlesResponseDto> {
+    return this.articlesService.publishArticles(currentUser, publishData, language);
   }
 
   @Patch(':slug/status')

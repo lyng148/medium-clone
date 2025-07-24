@@ -12,6 +12,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ListArticlesDto } from './dto/list-articles.dto';
 import { I18nService } from '../i18n/i18n.service';
 import { PublishArticlesDto } from './dto/publish-article.dto';
+import { DraftArticlesResponseDto } from './dto/draft-articles-response.dto';
+import { PublishArticlesResponseDto } from './dto/publish-articles-response.dto';
 
 interface TagListOperations {
   connect: { id: number }[];
@@ -95,7 +97,7 @@ export class ArticlesService {
     return this.buildArticleResponse(author, article);
   }
 
-  async getDraftArticles(currentUser: User) {
+  async getDraftArticles(currentUser: User): Promise<DraftArticlesResponseDto> {
     const articles = await this.prisma.article.findMany({
       where: {
         authorId: currentUser.id,
@@ -113,26 +115,30 @@ export class ArticlesService {
     };
   }
 
-  async publishArticles(currentUser: User, data: PublishArticlesDto, lang?: string) {
+  async publishArticles(
+    currentUser: User,
+    publishData: PublishArticlesDto,
+    language?: string,
+  ): Promise<PublishArticlesResponseDto> {
     // Check if all articles belong to the user and are in draft status
-    const articles = await this.prisma.article.findMany({
+    const draftArticles = await this.prisma.article.findMany({
       where: {
-        slug: { in: data.articleSlugs },
+        slug: { in: publishData.articleSlugs },
         authorId: currentUser.id,
         status: 'DRAFT',
       },
     });
 
-    if (articles.length !== data.articleSlugs.length) {
+    if (draftArticles.length !== publishData.articleSlugs.length) {
       throw new NotFoundException(
-        this.i18nService.getArticleMessage('errors.someArticlesNotFound', lang),
+        this.i18nService.getArticleMessage('errors.someArticlesNotFound', language),
       );
     }
 
     // Publish all articles
     await this.prisma.article.updateMany({
       where: {
-        slug: { in: data.articleSlugs },
+        slug: { in: publishData.articleSlugs },
         authorId: currentUser.id,
       },
       data: {
@@ -141,8 +147,8 @@ export class ArticlesService {
     });
 
     return {
-      message: this.i18nService.getArticleMessage('success.published', lang, {
-        count: articles.length,
+      message: this.i18nService.getArticleMessage('success.published', language, {
+        count: draftArticles.length,
       }),
     };
   }
