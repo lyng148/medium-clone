@@ -15,8 +15,11 @@ import { I18nService } from '../i18n/i18n.service';
 import { PublishArticlesDto } from './dto/publish-article.dto';
 import { DraftArticlesResponseDto } from './dto/draft-articles-response.dto';
 import { PublishArticlesResponseDto } from './dto/publish-articles-response.dto';
-import {ArticleStatisticsResponseDTO, MonthlyStatistic} from './dto/article-statistic-response.dto';
-import {MIN_INTERACTION} from './articles.constant';
+import {
+  ArticleStatisticsResponseDTO,
+  MonthlyStatistic,
+} from './dto/article-statistic-response.dto';
+import { MIN_INTERACTION } from './articles.constant';
 
 interface TagListOperations {
   connect: { id: number }[];
@@ -480,12 +483,12 @@ export class ArticlesService {
       return totalInteractions >= MIN_INTERACTION;
     });
 
-    const monthlyStats = new Map<string, MonthlyStatistic>();
+    const monthlyStatisticsMap = new Map<string, MonthlyStatistic>();
 
     const startDate = new Date(accountCreatedAt.getFullYear(), accountCreatedAt.getMonth(), 1);
     const endDate = new Date(now.getFullYear(), now.getMonth(), 1);
     for (let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
       const monthNames = [
         'January',
         'February',
@@ -501,7 +504,7 @@ export class ArticlesService {
         'December',
       ];
 
-      monthlyStats.set(key, {
+      monthlyStatisticsMap.set(key, {
         year: d.getFullYear(),
         month: d.getMonth() + 1,
         monthName: monthNames[d.getMonth()],
@@ -512,16 +515,16 @@ export class ArticlesService {
 
     qualifiedArticles.forEach((article) => {
       const articleDate = new Date(article.createdAt);
-      const key = `${articleDate.getFullYear()}-${articleDate.getMonth()}`;
+      const key = `${articleDate.getFullYear()}-${articleDate.getMonth() + 1}`;
 
-      const stat = monthlyStats.get(key);
+      const stat = monthlyStatisticsMap.get(key);
       if (stat) {
         stat.articlesCount += 1;
         stat.totalInteractions += article._count.favoritedBy + article._count.comments;
       }
     });
 
-    const statistics = Array.from(monthlyStats.values()).sort((a, b) => {
+    const statistics = Array.from(monthlyStatisticsMap.values()).sort((a, b) => {
       if (a.year !== b.year) return a.year - b.year;
       return a.month - b.month;
     });
