@@ -4,6 +4,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -14,6 +15,11 @@ import { I18nService } from '../i18n/i18n.service';
 import { PublishArticlesDto } from './dto/publish-article.dto';
 import { DraftArticlesResponseDto } from './dto/draft-articles-response.dto';
 import { PublishArticlesResponseDto } from './dto/publish-articles-response.dto';
+import {
+  ArticleStatisticsResponseDTO,
+  MonthlyStatistic,
+} from './dto/article-statistic-response.dto';
+import { MIN_INTERACTION } from './articles.constant';
 
 interface TagListOperations {
   connect: { id: number }[];
@@ -432,6 +438,109 @@ export class ArticlesService {
       articlesCount: transformedArticles.length,
       limit: listArticleDTO.limit || 20,
       offset: listArticleDTO.offset || 0,
+    };
+  }
+
+  async getArticleStatistics(
+    currentUser: User,
+    lang?: string,
+  ): Promise<ArticleStatisticsResponseDTO> {
+    const userInfo = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { createdAt: true },
+    });
+
+    if (!userInfo) {
+      throw new UnauthorizedException(this.i18nService.getAuthMessage('errors.unauthorized'), lang);
+    }
+
+    const accountCreatedAt = userInfo.createdAt;
+    const now = new Date();
+
+    const articlesWithInteractions = await this.prisma.article.findMany({
+      where: {
+        authorId: currentUser.id,
+        status: 'PUBLISHED',
+        createdAt: {
+          gte: accountCreatedAt,
+          lte: now,
+        },
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        _count: {
+          select: {
+            favoritedBy: true,
+            comments: true,
+          },
+        },
+      },
+    });
+
+    const qualifiedArticles = articlesWithInteractions.filter((article) => {
+      const totalInteractions = article._count.favoritedBy + article._count.comments;
+      return totalInteractions >= MIN_INTERACTION;
+    });
+
+    const monthlyStatisticsMap = new Map<string, MonthlyStatistic>();
+
+    const startDate = new Date(accountCreatedAt.getFullYear(), accountCreatedAt.getMonth(), 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    for (let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      const monthNames = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ];
+
+      monthlyStatisticsMap.set(key, {
+        year: d.getFullYear(),
+        month: d.getMonth() + 1,
+        monthName: monthNames[d.getMonth()],
+        articlesCount: 0,
+        totalInteractions: 0,
+      });
+    }
+
+    qualifiedArticles.forEach((article) => {
+      const articleDate = new Date(article.createdAt);
+      const key = `${articleDate.getFullYear()}-${articleDate.getMonth() + 1}`;
+
+      const stat = monthlyStatisticsMap.get(key);
+      if (stat) {
+        stat.articlesCount += 1;
+        stat.totalInteractions += article._count.favoritedBy + article._count.comments;
+      }
+    });
+
+    const statistics = Array.from(monthlyStatisticsMap.values()).sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.month - b.month;
+    });
+
+    const totalArticles = qualifiedArticles.length;
+    const totalInteractions = qualifiedArticles.reduce((sum, article) => {
+      return sum + article._count.favoritedBy + article._count.comments;
+    }, 0);
+
+    return {
+      statistics,
+      totalArticles,
+      totalInteractions,
+      accountCreatedAt,
+      periodStart: startDate,
+      periodEnd: now,
     };
   }
 

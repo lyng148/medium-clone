@@ -41,6 +41,11 @@ export class ArticlesController {
     return this.articlesService.getDraftArticles(currentUser);
   }
 
+  @Get('statistics')
+  getArticleStatistics(@CurrentUser() currentUser: User, @Language() lang: string) {
+    return this.articlesService.getArticleStatistics(currentUser, lang);
+  }
+
   @Get(':slug')
   findOne(@CurrentUser() currUser: User, @Param('slug') slug: string, @Language() lang: string) {
     return this.articlesService.findOne(currUser, slug, lang);

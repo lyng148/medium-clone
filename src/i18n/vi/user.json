@@ -7,7 +7,7 @@
     "cannotFollowSelf": "Bạn không thể theo dõi chính mình",
     "cannotUnfollowSelf": "Bạn không thể bỏ theo dõi chính mình",
     "alreadyFollowing": "Bạn đã theo dõi {username} rồi",
-    "notFollowing": "Bạn chưa theo dõi {{username}",
+    "notFollowing": "Bạn chưa theo dõi {username}",
     "cannotUpdateUser": "Không thể cập nhật thông tin người dùng",
     "invalidUserData": "Dữ liệu người dùng không hợp lệ"
   },
